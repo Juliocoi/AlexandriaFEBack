@@ -14,6 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.Customizer;
 
 @Configuration
 @EnableWebSecurity
@@ -25,9 +26,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
+                .cors(Customizer.withDefaults()) // <-- Ativa o bean CorsConfigurationSource
                 .csrf(AbstractHttpConfigurer::disable) // Desabilita proteção CSRF (não usada em APIs REST stateless)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/error").permitAll() // <-- Evita falso 403 em falhas internas
                         // 1. Rotas Públicas (Login e Auto-cadastro de Aluno)
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users/register").permitAll()
