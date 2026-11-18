@@ -24,6 +24,9 @@ public class Book {
     private String coverUrl;
 
     @Column(nullable = false, unique = true)
+    private String isbn;
+
+    @Column(nullable = false, unique = true)
     private String title;
 
     @Column(nullable = false)

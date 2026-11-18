@@ -89,6 +89,11 @@
             <optional>true</optional>
         </dependency>
 
+		<!-- Anotações do Jackson (@JsonFormat, etc.) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
 
 	</dependencies>
 
