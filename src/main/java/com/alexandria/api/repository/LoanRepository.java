@@ -15,6 +15,9 @@ public interface LoanRepository extends JpaRepository<Loan, UUID> {
     // Verifica se um livro possui empréstimos ativos (impede excluir um livro que está emprestado)
     boolean existsByBookIdAndStatus(UUID bookId, LoanStatus status);
 
+    // impede excluir um usuário que ainda possui livros emprestados
+    boolean existsByUserIdAndStatus(UUID userId, LoanStatus status);
+
     // Lista todos os empréstimos de um usuário específico (para a tela "Meu Perfil")
     List<Loan> findByUserIdOrderByLoanDateDesc(UUID userId);
 }
