@@ -10,6 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.alexandria.api.domain.user.User;
+import com.alexandria.api.domain.user.UserRole;
 
 import java.util.List;
 import java.util.UUID;
@@ -40,15 +43,21 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> findById(@PathVariable UUID id) {
+    public ResponseEntity<UserResponse> findById(
+        @PathVariable UUID id,
+        @AuthenticationPrincipal User loggedUser
+    ) {
+        validateOwnership(loggedUser, id);
         return ResponseEntity.ok(userService.findById(id));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<UserResponse> update(
             @PathVariable UUID id,
-            @RequestBody @Valid UpdateUserRequest request
+            @RequestBody @Valid UpdateUserRequest request,
+            @AuthenticationPrincipal User loggedUser
     ) {
+        validateOwnership(loggedUser, id);
         return ResponseEntity.ok(userService.update(id, request));
     }
 
@@ -56,5 +65,11 @@ public class UserController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private void validateOwnership(User loggedUser, UUID targetUserId) {
+        if (loggedUser.getRole() == UserRole.STUDENT && !loggedUser.getId().equals(targetUserId)) {
+            throw new SecurityException("Acesso negado: você só tem permissão para visualizar ou editar o seu próprio perfil.");
+        }
     }
 }

@@ -1,10 +1,13 @@
 package com.alexandria.api.controller;
 
+import com.alexandria.api.domain.user.User;
+import com.alexandria.api.domain.user.UserRole;
 import com.alexandria.api.dto.book.BookResponse;
 import com.alexandria.api.service.FavoriteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,7 +21,11 @@ public class FavoriteController {
 
     // Lista os livros favoritos do usuário (para a sessão superior da Home no React)
     @GetMapping
-    public ResponseEntity<List<BookResponse>> listFavorites(@PathVariable UUID userId) {
+    public ResponseEntity<List<BookResponse>> listFavorites(
+        @PathVariable UUID userId,
+        @AuthenticationPrincipal User loggedUser    
+    ) {
+        validateOwnership(loggedUser, userId);
         return ResponseEntity.ok(favoriteService.getUserFavorites(userId));
     }
 
@@ -26,8 +33,10 @@ public class FavoriteController {
     @PostMapping("/{bookId}")
     public ResponseEntity<Void> addFavorite(
             @PathVariable UUID userId,
-            @PathVariable UUID bookId
+            @PathVariable UUID bookId,
+            @AuthenticationPrincipal User loggedUser
     ) {
+        validateOwnership(loggedUser, userId);
         favoriteService.addFavorite(userId, bookId);
         return ResponseEntity.noContent().build();
     }
@@ -36,9 +45,17 @@ public class FavoriteController {
     @DeleteMapping("/{bookId}")
     public ResponseEntity<Void> removeFavorite(
             @PathVariable UUID userId,
-            @PathVariable UUID bookId
+            @PathVariable UUID bookId,
+            @AuthenticationPrincipal User loggedUser
     ) {
+        validateOwnership(loggedUser, userId);
         favoriteService.removeFavorite(userId, bookId);
         return ResponseEntity.noContent().build();
+    }
+
+    private void validateOwnership(User loggedUser, UUID targetUserId) {
+        if (loggedUser.getRole() == UserRole.STUDENT && !loggedUser.getId().equals(targetUserId)) {
+            throw new SecurityException("Acesso negado: você só tem permissão para gerenciar os seus próprios favoritos.");
+        }
     }
 }
